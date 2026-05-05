@@ -1,0 +1,4 @@
+node_modules/
+server/stock.db
+client/dist/
+.env

@@ -1,0 +1,12 @@
+{
+  "name": "stockflow",
+  "version": "1.0.0",
+  "description": "StockFlow - Inventory Management ERP",
+  "scripts": {
+    "install:all": "cd server && npm install && cd ../client && npm install",
+    "build": "cd client && npm run build",
+    "start": "cd server && node server.js",
+    "dev:server": "cd server && node server.js",
+    "dev:client": "cd client && npm run dev"
+  }
+}
