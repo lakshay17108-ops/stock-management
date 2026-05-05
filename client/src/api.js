@@ -18,12 +18,14 @@ export const api = {
   getCategories: () => request('/items/categories'),
   createItem: (data) => request('/items', { method: 'POST', body: JSON.stringify(data) }),
   updateItem: (code, data) => request(`/items/${encodeURIComponent(code)}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteItem: (code) => request(`/items/${encodeURIComponent(code)}`, { method: 'DELETE' }),
 
   // Transactions
   getTransactions: (params = '') => request(`/transactions${params ? '?' + params : ''}`),
   purchase: (data) => request('/transactions/purchase', { method: 'POST', body: JSON.stringify(data) }),
   sale: (data) => request('/transactions/sale', { method: 'POST', body: JSON.stringify(data) }),
   broken: (data) => request('/transactions/broken', { method: 'POST', body: JSON.stringify(data) }),
+  deleteTransaction: (id) => request(`/transactions/${id}`, { method: 'DELETE' }),
 
   // Production
   getRecipes: () => request('/production/recipes'),

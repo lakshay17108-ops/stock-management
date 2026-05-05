@@ -172,4 +172,29 @@ router.post('/broken', (req, res) => {
   }
 });
 
+
+// DELETE /api/transactions/:id — Delete a transaction and reverse its stock effect
+router.delete('/:id', (req, res) => {
+  try {
+    const txn = db.prepare('SELECT * FROM transactions WHERE id = ?').get(req.params.id);
+    if (!txn) return res.status(404).json({ error: 'Transaction not found' });
+
+    const del = db.transaction(() => {
+      // Reverse the stock effect
+      if (txn.transaction_type === 'Purchase') {
+        db.prepare('UPDATE items SET stock_qty = stock_qty - ? WHERE item_code = ?').run(txn.quantity, txn.item_code);
+      } else if (txn.transaction_type === 'Sale' || txn.transaction_type === 'Broken') {
+        db.prepare('UPDATE items SET stock_qty = stock_qty + ? WHERE item_code = ?').run(txn.quantity, txn.item_code);
+      }
+      db.prepare('DELETE FROM transactions WHERE id = ?').run(req.params.id);
+    });
+
+    del();
+    res.json({ message: 'Transaction deleted and stock adjusted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
+

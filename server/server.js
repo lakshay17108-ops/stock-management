@@ -22,7 +22,7 @@ app.get('/api/health', (req, res) => {
 // Serve React frontend in production
 const clientBuild = path.join(__dirname, '..', 'client', 'dist');
 app.use(express.static(clientBuild));
-app.get('*', (req, res) => {
+app.use((req, res) => {
   res.sendFile(path.join(clientBuild, 'index.html'));
 });
 

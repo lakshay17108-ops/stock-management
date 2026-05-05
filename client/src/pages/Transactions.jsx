@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
-import { Search, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Search, ArrowUpRight, ArrowDownRight, Trash2, CheckCircle } from 'lucide-react';
 
 export default function Transactions() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [msg, setMsg] = useState(null);
 
   const load = () => {
     setLoading(true);
@@ -20,21 +21,28 @@ export default function Transactions() {
 
   useEffect(() => { load(); }, [filter, search]);
 
-  const fmt = (v) => '₹' + Number(v).toLocaleString('en-IN', { minimumFractionDigits: 0 });
+  const handleDelete = async (id) => {
+    if (!confirm(`Delete transaction #${id}? This will reverse its stock effect.`)) return;
+    try {
+      await api.deleteTransaction(id);
+      setMsg({ type: 'success', text: 'Transaction deleted and stock adjusted' });
+      load();
+    } catch (err) { setMsg({ type: 'error', text: err.message }); }
+    setTimeout(() => setMsg(null), 3000);
+  };
 
+  const fmt = (v) => '₹' + Number(v).toLocaleString('en-IN', { minimumFractionDigits: 0 });
   const typeBadge = (type) => {
     const map = { Purchase: 'badge-success', Sale: 'badge-info', Broken: 'badge-danger', Production: 'badge-purple' };
     return <span className={`badge ${map[type] || 'badge-neutral'}`}>{type}</span>;
   };
-
   const isAddition = (type) => ['Purchase', 'Production'].includes(type);
 
   return (
     <div>
-      <div className="page-header">
-        <h2>Transactions</h2>
-        <p>Chronological log of all stock movements</p>
-      </div>
+      <div className="page-header"><h2>Transactions</h2><p>Chronological log of all stock movements</p></div>
+
+      {msg && <div className={`alert alert-${msg.type}`}>{msg.type === 'success' ? <CheckCircle size={16}/> : null}{msg.text}</div>}
 
       <div className="search-filter-bar">
         <div className="search-box">
@@ -62,11 +70,11 @@ export default function Transactions() {
         <div className="table-container">
           <table className="data-table">
             <thead>
-              <tr><th>ID</th><th>Item Code</th><th>Item Name</th><th>Type</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Service</th><th>Notes</th><th>Date</th></tr>
+              <tr><th>ID</th><th>Item Code</th><th>Item Name</th><th>Type</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Service</th><th>Notes</th><th>Date</th><th></th></tr>
             </thead>
             <tbody>
               {transactions.length === 0 ? (
-                <tr><td colSpan="10"><div className="empty-state"><p>No transactions found</p></div></td></tr>
+                <tr><td colSpan="11"><div className="empty-state"><p>No transactions found</p></div></td></tr>
               ) : transactions.map(t => (
                 <tr key={t.id}>
                   <td style={{ color: 'var(--text-muted)' }}>#{t.id}</td>
@@ -83,6 +91,9 @@ export default function Transactions() {
                   <td style={{ color: 'var(--text-secondary)' }}>{t.service_charge > 0 ? fmt(t.service_charge) : '—'}</td>
                   <td style={{ color: 'var(--text-secondary)', fontSize: 12, maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.notes || '—'}</td>
                   <td style={{ color: 'var(--text-secondary)', fontSize: 12, whiteSpace: 'nowrap' }}>{new Date(t.created_at).toLocaleString()}</td>
+                  <td>
+                    <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(t.id)} title="Delete transaction" style={{ color: 'var(--danger)' }}><Trash2 size={14} /></button>
+                  </td>
                 </tr>
               ))}
             </tbody>
